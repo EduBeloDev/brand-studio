@@ -36,7 +36,7 @@ Detalhes, decisões e andamento em [docs/estudio.md](docs/estudio.md); problemas
 
 | Aba | O que faz |
 | --- | --- |
-| Início | Mostra o modo de aprendizado (radar): ciclos, custo do dia, descobertas e sugestões de vídeo/carrossel. Uma sugestão vira quadro com um clique. |
+| Início | Mostra o modo de aprendizado (radar): pesquisas feitas, uso de IA do dia (estimado), descobertas e sugestões de vídeo/carrossel. Uma sugestão vira quadro com um clique. |
 | Conteúdos | Barra lateral com as pastas de `conteudo/`; criar, renomear (atualiza as ligações `[[nome]]`), mover, excluir para a lixeira e restaurar; editor de notas; quadros com prévia ao lado. |
 | Grafo | As notas e suas ligações, como no Obsidian. |
 | Roubar ideias | Recebe vídeo, áudio ou imagem de referência, extrai ritmo, quadros, transcrição e cores localmente e pede à IA técnicas reaproveitáveis, sem copiar o texto. |
@@ -51,7 +51,7 @@ Detalhes, decisões e andamento em [docs/estudio.md](docs/estudio.md); problemas
 
 **Pronúncia:** `conteudo/branding/identidade/pronuncia.md` diz como falar siglas e jargões; o app aplica só na voz, a tela e a legenda usam a grafia normal.
 
-**Custo:** a IA roda pelo comando `claude` já autenticado na máquina. O radar tem teto de custo por dia e de ciclos por sessão (configuráveis) e anota o custo de cada ciclo. Para abrir o app sem o radar começar sozinho: `RADAR=desligado npm run app`.
+**Uso de IA e custo:** a IA roda pelo comando `claude` (Claude Code) já logado na máquina. O app mostra o uso de cada pesquisa estimado pelo preço da API (o campo `total_cost_usd` que o Claude Code devolve). Com login pela assinatura do Claude, esse valor não é cobrado à parte: ele gasta o limite de uso da assinatura, o mesmo do Claude Code no terminal. Com uma `ANTHROPIC_API_KEY` configurada, o valor passa a ser cobrado na conta da API. O radar para sozinho ao chegar no limite de uso por dia ou no máximo de pesquisas (os dois configuráveis). Para abrir o app sem o radar começar sozinho: `RADAR=desligado npm run app`.
 
 ## O que já funciona
 
@@ -88,9 +88,9 @@ Capturas de 29/10/2026 feitas numa cópia de demonstração, com uma marca fict�
 
 ### Início: modo de aprendizado e sugestões
 
-O radar pesquisa tendências sozinho, dentro de um teto de custo, e transforma o que acha em sugestões. Cada sugestão vira um quadro de vídeo ou de carrossel com um clique.
+O radar pesquisa tendências sozinho, dentro de um limite de uso por dia, e transforma o que acha em sugestões. Cada sugestão vira um quadro de vídeo ou de carrossel com um clique.
 
-![Tela inicial com o modo de aprendizado parado, custo do dia e três sugestões de vídeo e carrossel](docs/prints/estudio-inicio.png)
+![Tela inicial com o modo de aprendizado parado, uso de IA do dia e três sugestões de vídeo e carrossel](docs/prints/estudio-inicio.png)
 
 ### Conteúdos: notas com ligações
 
@@ -174,7 +174,7 @@ O servidor e o núcleo não têm build: o Node executa os arquivos TypeScript di
 ### 4. Primeiros passos no estúdio
 
 1. Na aba **Marca**, abra as notas de identidade e preencha objetivo, visual, voz e personagem. O nome da marca fica em `conteudo/branding/marca.json`.
-2. Na aba **Início**, use **Pesquisar agora** para o radar trazer sugestões (usa a IA e tem custo; veja o teto nas configurações do radar) ou crie um quadro em **Conteúdos** com **+ Quadro**.
+2. Na aba **Início**, use **Pesquisar agora** para o radar trazer sugestões (usa a IA; veja o limite de uso nas configurações do radar) ou crie um quadro em **Conteúdos** com **+ Quadro**.
 3. Numa sugestão, clique em **Vídeo** ou **Carrossel**: a IA monta o quadro. Ajuste os cartões e confira a prévia à direita.
 4. Clique em **Produzir**. O resultado aparece em **Produções**, onde dá para baixar, aprovar ou rejeitar.
 

@@ -154,6 +154,8 @@ Fechadas (29/10/2026), estúdio de conteúdo no app (respostas do usuário: 1a, 
 
 ## Onde paramos
 
+29/10/2026: rótulos do modo de aprendizado reescritos para leigos ("Uso de IA hoje (estimado)", "Pesquisas desde que o app abriu", limite de uso por dia) com nota explicando que o valor é estimativa pelo preço da API e, com login pela assinatura, gasta o limite da assinatura em vez de ser cobrado. Conferido: login do `claude` é claude.ai, sem ANTHROPIC_API_KEY. Prints atualizados. Ainda sem commit.
+
 29/10/2026: README do GitHub atualizado com 9 telas do estúdio, capturadas numa cópia de demonstração (marca fictícia "Marca Exemplo" e robozinho de exemplo), nunca no conteúdo real. Para refazer: docs/prints/README.md (montar_demo.py + capturar.mjs, Firefox headless via geckodriver). O motor e o servidor aceitam BRAND_STUDIO_CONTEUDO, BRAND_STUDIO_SAIDA e BRAND_STUDIO_PERSONAGEM; sem personagem próprio, o motor usa amostras/personagem-exemplo/. Corrigido com teste: custo do dia zerado no radar desligado. Novas pendências no README: título do quadro cortado no cabeçalho e abas sem indicação de rolagem em janela estreita.
 
 29/10/2026: marca separada do repositório a pedido do usuário. O nome da marca vem de `conteudo/branding/marca.json` (local); notas iniciais de branding viraram modelos neutros; prompts dizem "a marca" e recebem o nome pela memória. Funções gerais do motor saíram dos scripts das amostras (`amostras/voz.py`, `SOM_TRANSICAO` em `efeitos.py`). Histórico do GitHub reescrito para tirar personagem, roteiros, referências e decisões da marca (backup completo em `backup/`, fora do git). Detalhes da produção e pendências da marca em `CLAUDE.local.md`; correções pendentes do app no README.

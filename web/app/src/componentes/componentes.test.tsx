@@ -51,8 +51,12 @@ describe('Inicio', () => {
     const aoPausar = vi.fn();
     render(<Inicio radar={{ situacao: 'aguardando', ciclosNaSessao: 2, custoHoje: 0.04, proximoEm: '2026-10-29T10:20:00Z', ultimasDescobertas: [] }}
       sugestoes={sugestoes} aoPausar={aoPausar} aoRetomar={vi.fn()} aoAgora={vi.fn()} aoCriarQuadro={vi.fn()} aoDescartar={vi.fn()} />);
-    expect(screen.getByText(/aprendendo|aguardando/i)).toBeTruthy();
     expect(screen.getByText(/US\$ 0,04/)).toBeTruthy();
+    expect(screen.getByText(/Uso de IA hoje/)).toBeTruthy();
+    expect(screen.getByText(/Pesquisas desde que o app abriu/)).toBeTruthy();
+    expect(screen.getByText(/Esperando a próxima pesquisa/)).toBeTruthy();
+    // o valor é estimativa pelo preço da API: com a assinatura do Claude, não é cobrança à parte
+    expect(screen.getByText(/não é cobrança à parte/)).toBeTruthy();
     await usuario.click(screen.getByRole('button', { name: /pausar/i }));
     expect(aoPausar).toHaveBeenCalled();
   });
@@ -65,6 +69,7 @@ describe('Inicio', () => {
       aoPausar={vi.fn()} aoRetomar={aoRetomar} aoAgora={vi.fn()} aoCriarQuadro={aoCriarQuadro} aoDescartar={vi.fn()} />);
     await usuario.click(screen.getByRole('button', { name: /retomar/i }));
     expect(aoRetomar).toHaveBeenCalled();
+    expect(screen.queryByText(/Custo hoje|Ciclos nesta sessão/)).toBeNull();
     const card = screen.getByText('API é o balcão').closest('article')!;
     await usuario.click(within(card as HTMLElement).getByRole('button', { name: /carrossel/i }));
     expect(aoCriarQuadro).toHaveBeenCalledWith('conhecimento/sugestoes/api.md', 'carrossel');

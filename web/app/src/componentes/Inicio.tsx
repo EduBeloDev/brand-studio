@@ -15,8 +15,8 @@ interface Props {
 }
 
 const SITUACAO: Record<EstadoRadar['situacao'], string> = {
-  parado: 'Parado', rodando: 'Aprendendo agora...', aguardando: 'Aguardando o próximo ciclo', pausado: 'Pausado',
-  limite: 'No limite de hoje', erro: 'Deu erro no último ciclo',
+  parado: 'Parado', rodando: 'Pesquisando agora...', aguardando: 'Esperando a próxima pesquisa', pausado: 'Pausado',
+  limite: 'Parou: chegou ao limite de hoje', erro: 'A última pesquisa deu erro',
 };
 
 export const reais = (v: number) => `US$ ${v.toFixed(2).replace('.', ',')}`;
@@ -43,23 +43,25 @@ export function Inicio({ radar, sugestoes, config, aoPausar, aoRetomar, aoAgora,
           </div>
         </div>
         <dl className="numeros">
-          <div><dt>Ciclos nesta sessão</dt><dd>{radar.ciclosNaSessao}{config ? ` de ${config.maxCiclosPorSessao}` : ''}</dd></div>
-          <div><dt>Custo hoje</dt><dd>{reais(radar.custoHoje)}{config ? ` de ${reais(config.tetoDiarioUsd)}` : ''}</dd></div>
-          <div><dt>Sugestões novas</dt><dd>{novas.length}</dd></div>
+          <div><dt>Pesquisas desde que o app abriu</dt><dd>{radar.ciclosNaSessao}{config ? ` de ${config.maxCiclosPorSessao}` : ''}</dd></div>
+          <div><dt>Uso de IA hoje (estimado)</dt><dd>{reais(radar.custoHoje)}{config ? ` de ${reais(config.tetoDiarioUsd)}` : ''}</dd></div>
+          <div><dt>Sugestões esperando você</dt><dd>{novas.length}</dd></div>
         </dl>
+        <p className="suave nota-uso">O uso é medido pelo preço da API do Claude. Com login pela assinatura do Claude, não é cobrança à parte:
+          ele gasta o limite de uso da assinatura. O limite por dia faz o radar parar antes de gastar demais.</p>
         {radar.ultimoErro && <p className="erro-texto">{radar.ultimoErro}</p>}
         {radar.ultimasDescobertas.length > 0 && (
-          <p className="descobertas">Último ciclo: {radar.ultimasDescobertas.slice(0, 6).map((c) => (
+          <p className="descobertas">A última pesquisa trouxe: {radar.ultimasDescobertas.slice(0, 6).map((c) => (
             <button key={c} type="button" className="ligacao" onClick={() => aoAbrir?.(c)}>{c.split('/').pop()!.replace(/\.md$/, '')}</button>))}
           </p>
         )}
         {config && aoConfig && (
           <details className="config">
             <summary>Configurações do radar</summary>
-            <label><input type="checkbox" checked={config.ativoAoAbrir} onChange={(e) => aoConfig({ ativoAoAbrir: e.target.checked })} /> Começar ao abrir o app</label>
-            <label>Intervalo (min) <input type="number" min={1} max={1440} value={config.intervaloMin} onChange={(e) => aoConfig({ intervaloMin: Number(e.target.value) })} /></label>
-            <label>Ciclos por sessão <input type="number" min={1} max={100} value={config.maxCiclosPorSessao} onChange={(e) => aoConfig({ maxCiclosPorSessao: Number(e.target.value) })} /></label>
-            <label>Teto por dia (US$) <input type="number" min={0} max={50} step={0.1} value={config.tetoDiarioUsd} onChange={(e) => aoConfig({ tetoDiarioUsd: Number(e.target.value) })} /></label>
+            <label><input type="checkbox" checked={config.ativoAoAbrir} onChange={(e) => aoConfig({ ativoAoAbrir: e.target.checked })} /> Pesquisar sozinho quando o app abrir</label>
+            <label>Minutos entre uma pesquisa e outra <input type="number" min={1} max={1440} value={config.intervaloMin} onChange={(e) => aoConfig({ intervaloMin: Number(e.target.value) })} /></label>
+            <label>Máximo de pesquisas cada vez que o app abre <input type="number" min={1} max={100} value={config.maxCiclosPorSessao} onChange={(e) => aoConfig({ maxCiclosPorSessao: Number(e.target.value) })} /></label>
+            <label>Limite de uso de IA por dia (US$ estimado) <input type="number" min={0} max={50} step={0.1} value={config.tetoDiarioUsd} onChange={(e) => aoConfig({ tetoDiarioUsd: Number(e.target.value) })} /></label>
           </details>
         )}
       </section>

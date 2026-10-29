@@ -31,9 +31,9 @@ export const TOPICOS: Topico[] = [
   { id: 'radar', funcao: 'radar', titulo: 'Modo de aprendizado (radar de assuntos)', palavras: 'pesquisa tendencias jargoes web claude',
     resumo: 'O Claude pesquisa na web o que está em alta em tecnologia, explica os jargões e sugere vídeos.',
     passos: ['Ele começa sozinho quando o app abre (dá para desligar nas configurações do radar, na aba Início).',
-      'A cada ciclo, escreve notas em conhecimento/: tendências (com fontes e datas), jargões (com pronúncia) e sugestões.',
+      'A cada pesquisa, escreve notas em conhecimento/: tendências (com fontes e datas), jargões (com pronúncia) e sugestões.',
       'Para pesquisar na hora, clique em "Pesquisar agora".',
-      'O custo de cada ciclo aparece na tela; há um teto por dia e um limite de ciclos por sessão.'],
+      'O uso de IA de cada pesquisa aparece na tela, estimado pelo preço da API do Claude. Com login pela assinatura do Claude, não é cobrança à parte: gasta o limite de uso da assinatura. Há um limite de uso por dia e um máximo de pesquisas cada vez que o app abre.'],
     dica: 'Tendência marcada como "proposta" é ideia editorial, não fato: confira antes de afirmar.' },
   { id: 'pausar-radar', funcao: 'pausar-radar', titulo: 'Pausar ou retomar o aprendizado', palavras: 'parar desligar radar',
     resumo: 'Você pode pausar o modo de aprendizado a qualquer momento.',
@@ -182,7 +182,7 @@ export const TOPICOS: Topico[] = [
     passos: ['"Não consegui abrir o Claude Code": instale o Claude Code e faça login no terminal (claude).',
       '"Falta o ambiente de voz": siga amostras/README.md para criar os ambientes de voz.',
       'Prévia não aparece: confira se o Python e o ffmpeg estão instalados.',
-      'Radar em "limite": o teto de custo do dia ou de ciclos da sessão foi atingido; aumente nas configurações.'] },
+      'Radar "chegou ao limite de hoje": bateu o limite de uso de IA do dia ou o máximo de pesquisas; aumente nas configurações do radar.'] },
 ];
 
 /** Busca sem acento e sem maiúscula; todas as palavras precisam aparecer; quem casa no título vem primeiro. */
