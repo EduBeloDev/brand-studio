@@ -1,7 +1,15 @@
 node_modules/
 saida/
 .env
-amostras/
+# Versionar fontes das amostras; manter ambientes, modelos e renders locais.
+/amostras/*
+!/amostras/*.py
+!/amostras/*.json
+!/amostras/*.md
+!/amostras/personagem/
+/amostras/personagem/*
+!/amostras/personagem/*.png
+!/amostras/personagem/*.json
 
 # Vídeos de terceiros usados somente como referência local
 /WhatsApp Video *.mp4

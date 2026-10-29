@@ -384,3 +384,5 @@ Copyright © 2026 Eduardo Simonelli (EduBeloDev). O código e a documentação o
 | Vender o software, versões modificadas ou acesso pago/SaaS às suas funções | Exige autorização prévia por escrito do titular |
 
 O titular mantém seus direitos e pode explorar comercialmente o próprio software. A licença não exige créditos do programa nos conteúdos gerados. Materiais e dependências de terceiros mantêm suas próprias licenças. O texto completo do `LICENSE` estabelece as condições; esta seção é um resumo.
+
+
