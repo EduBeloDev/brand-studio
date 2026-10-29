@@ -364,3 +364,23 @@ As decisões detalhadas ficam em [CLAUDE.md](CLAUDE.md).
 Consulte [CLAUDE.md](CLAUDE.md) antes de alterar a arquitetura ou construir novas etapas. Ele reúne as decisões, os riscos, as diretrizes de qualidade visual e o ponto de continuidade do projeto.
 
 Mantenha regras compartilhadas em `core/`, comandos em `cli/` e interações HTTP/interface em `web/`. Ao substituir uma estação provisória, preserve o fluxo de revisão e atualize a documentação para distinguir o que está implementado do que continua planejado.
+
+
+## Regra de desenvolvimento: testes primeiro
+
+**Sempre escrever e executar testes antes de implementar ou alterar um caso de uso.** Definir critérios de aceitação, verificar que o teste falha pelo comportamento ausente, implementar, confirmar que passa e só então refatorar. Cobrir o fluxo principal e erros relevantes. Um bloqueio de execução deve ser registrado; não conta como validação concluída. A regra completa está no [CLAUDE.md](CLAUDE.md).
+
+
+## Licença e autoria
+
+Copyright © 2026 Eduardo Simonelli (EduBeloDev). O código e a documentação originais estão sob a [licença própria do Brand Studio](LICENSE), de código disponível com restrição de comercialização do software. **Não é MIT nem uma licença open source aprovada pela OSI.**
+
+| Uso | Condição |
+| --- | --- |
+| Clonar, estudar, executar e modificar | Permitido |
+| Redistribuir gratuitamente o código ou versões modificadas | Permitido, preservando licença e autoria e identificando alterações |
+| Produzir conteúdo monetizado para Instagram, TikTok e outras plataformas | Permitido |
+| Vender vídeos, imagens e serviços de produção usando o programa internamente | Permitido |
+| Vender o software, versões modificadas ou acesso pago/SaaS às suas funções | Exige autorização prévia por escrito do titular |
+
+O titular mantém seus direitos e pode explorar comercialmente o próprio software. A licença não exige créditos do programa nos conteúdos gerados. Materiais e dependências de terceiros mantêm suas próprias licenças. O texto completo do `LICENSE` estabelece as condições; esta seção é um resumo.
