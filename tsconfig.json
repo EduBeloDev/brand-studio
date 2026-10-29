@@ -19,5 +19,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["core", "cli"]
+  "include": ["core", "cli", "web/server.ts"]
 }

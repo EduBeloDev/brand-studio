@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brand Studio</title>
+  <link rel="stylesheet" href="/estilo.css">
+  <script>
+    // Aplica o tema salvo antes de desenhar a página, para não piscar o tema errado.
+    try { document.documentElement.dataset.theme = localStorage.getItem('tema') || 'dark'; } catch {}
+  </script>
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"></div>
+
+  <header class="topo">
+    <div class="logo"><span class="logo-marca"></span>Brand Studio</div>
+    <button class="botao botao-fantasma" id="tema" type="button" aria-label="Alternar tema claro e escuro">
+      <span id="tema-rotulo">Tema claro</span>
+    </button>
+  </header>
+
+  <main class="pagina">
+    <section class="cartao" aria-labelledby="titulo-gerar">
+      <h1 id="titulo-gerar">Nova peça</h1>
+      <p class="apoio">Diga o tema e a esteira monta o texto e o visual para você aprovar.</p>
+      <form id="form-gerar" class="form-gerar">
+        <input id="tema-campo" class="campo" type="text" placeholder="Ex.: Promoção de verão" autocomplete="off" required>
+        <button class="botao botao-primario" type="submit" id="botao-gerar">Gerar peça</button>
+      </form>
+      <p class="mensagem" id="mensagem" role="status" aria-live="polite"></p>
+    </section>
+
+    <section aria-labelledby="titulo-pecas">
+      <div class="cabecalho-lista">
+        <h2 id="titulo-pecas">Peças</h2>
+        <div class="filtros" role="group" aria-label="Filtrar peças">
+          <button class="botao botao-filtro" type="button" data-filtro="aguardando-aprovacao" aria-pressed="true">Aguardando</button>
+          <button class="botao botao-filtro" type="button" data-filtro="aprovada" aria-pressed="false">Aprovadas</button>
+          <button class="botao botao-filtro" type="button" data-filtro="rejeitada" aria-pressed="false">Rejeitadas</button>
+          <button class="botao botao-filtro" type="button" data-filtro="todas" aria-pressed="false">Todas</button>
+        </div>
+      </div>
+      <div class="grade" id="grade"></div>
+      <p class="vazio" id="vazio" hidden>Nenhuma peça aqui ainda.</p>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
