@@ -1,33 +1,25 @@
-# Laboratório de vídeos e carrosséis
+# Motor de renderização
 
-Scripts experimentais, separados do núcleo TypeScript e do painel. Esta pasta agora versiona Python, roteiros JSON, documentação e recortes do personagem. Ambientes virtuais, pesos de modelos, ferramentas baixadas, áudios de referência e renders continuam locais e não fazem parte do backup Git.
+Scripts em Python que o app chama para desenhar prévias, carrosséis e vídeos. Só estes arquivos são versionados; os
+recortes do personagem (`personagem/`), os scripts das peças de exemplo da marca, ambientes Python, modelos de voz,
+áudios de referência e renders ficam no computador de quem usa (ver o `.gitignore`).
 
 ## Mapa
 
-- `arte.py`: composição, fontes e personagem.
-- `carrossel.py` e `video.py`: amostra sobre licenças.
-- `mitos.py`, `carrossel_mitos.py`, `demos.py` e `efeitos.py`: produção de mitos e suas demonstrações/efeitos.
-- `roteiro.py`, `conteudo.json`, `falas_a.json`, `falas_b.json`: conteúdo e falas.
-- `trilha.py`: trilha sintetizada.
-- `narracao.py`, `gerar_piper.py`, `gerar_chatterbox.py`, `gerar_falas.py`: experimentos de voz.
-- `asr.py`, `alinhar.py`, `refazer_falas.py`, `siglas.py`, `chatterbox_siglas.py`, `chatterbox_teste.py`, `teste_mix.py`: apoio a transcrição, pronúncia e mixagem.
-- `personagem/`: recortes e coordenadas; folha original na raiz.
+- `estudio_render.py`: ponto de entrada (`cena`, `slides`, `video`, `tecnica`); lê o pedido em JSON pela entrada padrão.
+- `arte.py`: cores, fontes, fundo, janela do personagem, texto e assinatura (o nome vem de `conteudo/branding/marca.json`).
+- `efeitos.py`: pixel art, texto que surge em pixels, destruição, transições, janelas no estilo antigo e sons sintetizados.
+- `demos.py` e `demos_dados.py`: demonstrações (código, terminal, lista, comparação).
+- `trilha.py`: trilha chiptune sintetizada na duração exata do vídeo.
+- `voz.py`: leitura da narração e envelope de volume.
+- `gerar_falas.py`: narração com o Chatterbox usando um áudio de referência de timbre (`ref-piper.wav`, local).
+- `alinhar.py`, `asr.py`, `transcrever.py`: tempo de cada palavra e transcrição com faster-whisper.
 
 ## Execução e limites
 
-Leia o cabeçalho de cada script para seus argumentos. Renderização visual usa Python, Pillow e FFmpeg. Narração e alinhamento têm dependências adicionais como PyTorch, Chatterbox, Piper e faster-whisper; os ambientes locais não são intercambiáveis. Os scripts ainda possuem caminhos de fontes e dependências da máquina de desenvolvimento. Não há instalação reproduzível única validada para um clone novo.
+Renderização visual usa Python, Pillow e FFmpeg. Narração e alinhamento usam ambientes próprios (`.venv-cb` com
+Chatterbox e PyTorch; `.venv-asr` com faster-whisper); os ambientes não são intercambiáveis e ainda não há instalação
+reproduzível única. Confira os caminhos de fontes em `arte.py` antes de rodar em outra máquina.
 
-Antes de executar em outra máquina, confira os caminhos em `arte.py`, instale as fontes indicadas e prepare os modelos e referências exigidos pelo script escolhido. Consulte [origem dos recursos](ORIGEM-DOS-RECURSOS.md). Não executar scripts de geração apenas como teste: podem baixar modelos, sobrescrever saídas e consumir tempo considerável.
-
-Exemplo da amostra estática, depois de configurar fontes e Pillow:
-
-```bash
-cd amostras
-python3 carrossel.py
-```
-
-Os testes `npm test` validam o núcleo TypeScript, não estes experimentos. A regra de testes antes de alterar casos de uso continua aplicável. A conferência sintática dos arquivos Python não equivale a validar renderização ou áudio.
-
-## Preservação
-
-O GitHub guarda os fontes e ativos versionados. Para preservar também resultados, referências de áudio e modelos baixados, faça backup separado de `amostras/saida/`, `amostras/ref-*.wav` e dos demais arquivos locais necessários. Não publique gravações de referência de terceiros sem conferir direitos.
+Os testes `npm test` cobrem a ponte entre o app e o motor (`core/render/`), não a renderização em si; ela é conferida
+produzindo peças e olhando os quadros.

@@ -1,4 +1,4 @@
-"""Peças de apoio da amostra marca: cores, fontes, fundo, janela do personagem e texto.
+"""Peças de apoio do motor: cores, fontes, fundo, janela do personagem e texto.
 
 Regra do personagem: o recorte da folha nunca é redesenhado. Ele só é ampliado por um número
 inteiro, sem suavizar (cada pixel vira um bloco), e depois a janela inteira se move.
@@ -11,7 +11,24 @@ from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-PERSONAGEM = os.path.join(AQUI, "personagem")
+# Pastas trocáveis por variável de ambiente (o servidor repassa as dele; as capturas usam uma cópia de demonstração).
+CONTEUDO = os.environ.get("BRAND_STUDIO_CONTEUDO") or os.path.join(AQUI, "..", "conteudo")
+
+
+def _nome_marca():
+    """O nome da marca mora só no computador (conteudo/branding/marca.json, fora do git)."""
+    try:
+        with open(os.path.join(CONTEUDO, "branding", "marca.json"), encoding="utf-8") as arq:
+            return str(json.load(arq).get("nome") or "").strip() or "minha marca"
+    except (OSError, ValueError, AttributeError):
+        return "minha marca"
+
+
+NOME_MARCA = _nome_marca()
+# Personagem da marca (só no computador); sem ele, o robozinho de exemplo (personagem_exemplo.py).
+PERSONAGEM = os.environ.get("BRAND_STUDIO_PERSONAGEM") or next(
+    (p for p in (os.path.join(AQUI, "personagem"), os.path.join(AQUI, "personagem-exemplo")) if os.path.isdir(p)),
+    os.path.join(AQUI, "personagem-exemplo"))
 
 BG0 = (11, 6, 20)
 BG1 = (28, 11, 52)
@@ -117,26 +134,36 @@ def colar(destino, img, x, y, opacidade=1.0):
 # ---------------------------------------------------------------- texto
 
 def _tokens(texto):
-    """'Faça *quase tudo*.' vira [(palavra, destacada)]; asteriscos marcam o destaque."""
+    """'Faça *quase tudo*.' vira [(palavra, destacada, colada)]; asteriscos marcam o destaque. A pontuação depois do
+    asterisco final ('*feio*:') fica colada à palavra, mas fora do marcador amarelo."""
     saida, ligado = [], False
     for p in texto.split():
         if p.startswith("*"):
             ligado = True
-        saida.append((p.replace("*", ""), ligado))
-        if "*" in p[1:]:
+        fecha = p.rfind("*") if "*" in p[1:] else -1
+        resto = p[fecha + 1:] if fecha > 0 else ""
+        if resto and ligado:
+            saida.append((p[:fecha + 1].replace("*", ""), True, False))
+            saida.append((resto.replace("*", ""), False, True))
+        else:
+            saida.append((p.replace("*", ""), ligado, False))
+        if fecha > 0:
             ligado = False
     return saida
+
+
+def _juntar(tokens):
+    return "".join(("" if i == 0 or t[2] else " ") + t[0] for i, t in enumerate(tokens))
 
 
 def quebrar(texto, f, largura):
     d = ImageDraw.Draw(Image.new("L", (1, 1)))
     linhas, atual = [], []
-    for palavra, dest in _tokens(texto):
-        teste = " ".join(p for p, _ in atual + [(palavra, dest)])
-        if atual and d.textlength(teste, font=f) > largura:
+    for tok in _tokens(texto):
+        if atual and not tok[2] and d.textlength(_juntar(atual + [tok]), font=f) > largura:
             linhas.append(atual)
             atual = []
-        atual.append((palavra, dest))
+        atual.append(tok)
     if atual:
         linhas.append(atual)
     return linhas
@@ -152,9 +179,10 @@ def bloco(texto, nome_fonte, tamanho, largura, cor=TEXTO, entrelinha=1.12, alinh
     d = ImageDraw.Draw(img)
     espaco = d.textlength(" ", font=f)
     for i, linha in enumerate(linhas):
-        total = d.textlength(" ".join(p for p, _ in linha), font=f)
+        total = d.textlength(_juntar(linha), font=f)
         x = pad + ((largura - total) / 2 if alinhar == "centro" else 0)
         y = pad + i * alt
+        depois = lambda k: 0 if k + 1 < len(linha) and linha[k + 1][2] else espaco  # noqa: E731
         # primeiro os marcadores (um retângulo por sequência de palavras destacadas)
         xs, j = x, 0
         while j < len(linha):
@@ -168,20 +196,20 @@ def bloco(texto, nome_fonte, tamanho, largura, cor=TEXTO, entrelinha=1.12, alinh
                     (ini - pad * 0.55, y + tamanho * 0.08, xs + pad * 0.3, y + tamanho * 1.12),
                     radius=int(tamanho * 0.22), fill=AMARELO,
                 )
-                xs += espaco
+                xs += depois(k - 1)
                 j = k
             else:
-                xs += d.textlength(linha[j][0], font=f) + espaco
+                xs += d.textlength(linha[j][0], font=f) + depois(j)
                 j += 1
         xs = x
-        for palavra, dest in linha:
+        for k, (palavra, dest, _) in enumerate(linha):
             d.text((xs, y), palavra, font=f, fill=BG0 if dest else cor)
-            xs += d.textlength(palavra, font=f) + espaco
+            xs += d.textlength(palavra, font=f) + depois(k)
     return img
 
 
 def pilula(texto, tamanho=26, cor=TEXTO, borda=AMARELO, preenche=None, folga=(26, 12)):
-    """Rótulo no estilo da folha de emotes: caixa com contorno e texto em DM Mono maiúsculo."""
+    """Rótulo em pílula: caixa com contorno e texto em DM Mono maiúsculo."""
     f = fonte("mono", tamanho)
     d = ImageDraw.Draw(Image.new("L", (1, 1)))
     texto = texto.upper()
@@ -212,16 +240,16 @@ def seta(tamanho, cor=TEXTO, largura=5):
 
 
 def marca(tamanho=38):
-    """Assinatura: quadradinho magenta com brilho + a palavra marca."""
+    """Assinatura: quadradinho magenta com brilho + o nome da marca."""
     f = fonte("titulo", tamanho)
     d = ImageDraw.Draw(Image.new("L", (1, 1)))
-    tw = int(d.textlength("marca", font=f))
+    tw = int(d.textlength(NOME_MARCA, font=f))
     q = int(tamanho * 0.8)
     img = Image.new("RGBA", (q + 16 + tw + 8, int(tamanho * 1.4)), (0, 0, 0, 0))
     dd = ImageDraw.Draw(img)
     dd.rounded_rectangle((0, 4, q, 4 + q), radius=q // 4, fill=MAGENTA)
     dd.rectangle((q // 4, 4 + q // 4, q // 4 + q // 5, 4 + q // 4 + q // 5), fill=(255, 220, 245))
-    dd.text((q + 16, 0), "marca", font=f, fill=TEXTO)
+    dd.text((q + 16, 0), NOME_MARCA, font=f, fill=TEXTO)
     return img
 
 

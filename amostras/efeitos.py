@@ -1,4 +1,4 @@
-"""Efeitos da marca: pixel art (bombinha, explosão, estrelinhas), texto que surge em pixels,
+"""Efeitos do motor: pixel art (bombinha, explosão, estrelinhas), texto que surge em pixels,
 destruição em blocos, transições e efeitos sonoros. Tudo é desenhado ou sintetizado aqui, sem
 material de terceiros.
 
@@ -36,18 +36,49 @@ def ampliar(img, esc):
 # ------------------------------------------------------------------ sprites
 
 def bomba(quadro=0, esc=6):
-    """Bombinha 8-bit com pavio aceso; 'quadro' anima a faísca."""
-    s = Image.new("RGBA", (20, 20), (0, 0, 0, 0))
+    """Bombinha 8-bit: esfera sombreada em tons (luz vindo de cima à esquerda), contorno, brilho,
+    tampa metálica inclinada, pavio trançado e faísca animada ('quadro')."""
+    n = 26
+    s = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    px = s.load()
+    cx, cy, r = 11.0, 15.0, 9.2
+    luz = (-0.55, -0.62, 0.56)
+    tons = [(22, 18, 38), (40, 34, 66), (62, 54, 98), (98, 88, 146), (168, 158, 214)]
+    contorno = (8, 6, 14)
+    for y in range(n):
+        for x in range(n):
+            dx, dy = (x + 0.5 - cx) / r, (y + 0.5 - cy) / r
+            dd = dx * dx + dy * dy
+            if dd > 1:
+                continue
+            if dd > (1 - 1.15 / r) ** 2:
+                px[x, y] = contorno + (255,)
+                continue
+            nz = math.sqrt(1 - dd)
+            i = dx * luz[0] + dy * luz[1] + nz * luz[2]
+            k = 0 if i < 0.05 else 1 if i < 0.38 else 2 if i < 0.68 else 3 if i < 0.9 else 4
+            if k == 0 and dx > 0.35 and dy > 0.35:   # luz refletida na borda de baixo
+                k = 1
+            px[x, y] = tons[k] + (255,)
+    for x, y in ((6, 10), (7, 10), (6, 11)):          # brilho
+        px[x, y] = (236, 232, 255, 255)
     d = ImageDraw.Draw(s)
-    d.ellipse((2, 6, 17, 19), fill=(34, 28, 52, 255), outline=(8, 6, 14, 255))
-    d.ellipse((5, 9, 8, 12), fill=(126, 112, 178, 255))
-    d.rectangle((8, 4, 11, 6), fill=(140, 140, 156, 255), outline=(8, 6, 14, 255))
-    d.line((10, 3, 11, 2), fill=(222, 190, 132, 255))
-    d.point((12, 1), fill=(222, 190, 132, 255))
-    faiscas = [[(13, 0), (12, 0), (14, 1)], [(13, 0), (14, 0), (13, 1), (15, 2)], [(12, 0), (14, 1), (15, 0)]]
-    cores = [(255, 240, 140, 255), (255, 150, 40, 255), (255, 61, 202, 255)]
-    for k, ponto in enumerate(faiscas[quadro % 3]):
-        d.point(ponto, fill=cores[(k + quadro) % 3])
+    tampa = [(14, 4), (19, 7), (17, 10), (12, 7)]
+    d.polygon(tampa, fill=(150, 150, 168, 255), outline=contorno + (255,))
+    d.line([(14, 5), (18, 7)], fill=(210, 210, 224, 255))
+    pavio = [(17, 4), (17, 3), (18, 3), (18, 2), (19, 2), (20, 1), (21, 1), (22, 1)]
+    for k, (x, y) in enumerate(pavio):
+        px[x, y] = ((222, 190, 132, 255) if k % 2 == 0 else (160, 124, 78, 255))
+    faiscas = [
+        [((23, 0), (255, 250, 220)), ((24, 1), (255, 236, 120)), ((22, 0), (255, 150, 40)), ((23, 2), (255, 150, 40)),
+         ((25, 0), (255, 61, 202))],
+        [((23, 1), (255, 250, 220)), ((23, 0), (255, 236, 120)), ((24, 2), (255, 236, 120)), ((22, 2), (255, 150, 40)),
+         ((25, 1), (255, 150, 40)), ((21, 0), (255, 61, 202))],
+        [((23, 0), (255, 236, 120)), ((24, 0), (255, 150, 40)), ((22, 1), (255, 236, 120)), ((25, 2), (255, 61, 202))],
+    ]
+    for (x, y), cor in faiscas[quadro % 3]:
+        if 0 <= x < n and 0 <= y < n:
+            px[x, y] = cor + (255,)
     return ampliar(s, esc)
 
 
@@ -317,52 +348,85 @@ def t_dissolucao(A, B, p, chave=None):
     return Image.blend(A, B, suave(p))
 
 
-def cromo_janela(img, titulo="marca.exe", barra=58, borda=6):
-    """Moldura de janela retrô (barra roxa com três botões) em volta de uma imagem."""
+# Visual de janela do sistema antigo: cinza em relevo, barra de título azul em degradê.
+W98_CINZA, W98_CLARO, W98_BRANCO = (192, 192, 192), (223, 223, 223), (255, 255, 255)
+W98_ESCURO, W98_PRETO = (128, 128, 128), (0, 0, 0)
+W98_AZUL, W98_AZUL2 = (0, 0, 128), (16, 132, 208)
+
+
+def bisel(d, caixa, tipo="janela", e=2):
+    """Relevo de duas linhas (luz em cima/esquerda, sombra embaixo/direita); 'afundado' inverte."""
+    x0, y0, x1, y1 = caixa
+    camadas = {"janela": ((W98_CLARO, W98_PRETO), (W98_BRANCO, W98_ESCURO)),
+               "botao": ((W98_BRANCO, W98_PRETO), (W98_CLARO, W98_ESCURO)),
+               "afundado": ((W98_ESCURO, W98_BRANCO), (W98_PRETO, W98_CLARO))}[tipo]
+    for k, (luz, sombra) in enumerate(camadas):
+        o = k * e
+        d.rectangle((x0 + o, y0 + o, x1 - o, y0 + o + e - 1), fill=luz)
+        d.rectangle((x0 + o, y0 + o, x0 + o + e - 1, y1 - o), fill=luz)
+        d.rectangle((x0 + o, y1 - o - e + 1, x1 - o, y1 - o), fill=sombra)
+        d.rectangle((x1 - o - e + 1, y0 + o, x1 - o, y1 - o), fill=sombra)
+
+
+def botao(d, caixa, texto=None, fonte=None, apertado=False, cor=W98_CINZA, cor_texto=W98_PRETO):
+    d.rectangle(caixa, fill=cor)
+    bisel(d, caixa, "afundado" if apertado else "botao")
+    if texto:
+        x0, y0, x1, y1 = caixa
+        d.text(((x0 + x1) / 2 + (2 if apertado else 0), (y0 + y1) / 2 + (2 if apertado else 0)), texto,
+               font=fonte, fill=cor_texto, anchor="mm")
+
+
+# Som de cada transição do catálogo: (nome do som, volume, parâmetros).
+SOM_TRANSICAO = {
+    "blocos": [("desmonte", 0.8, {})], "glitch": [("glitch", 0.9, {})], "zoom": [("zum", 0.9, {})],
+    "cacos": [("vidro", 0.9, {})], "desmontagem": [("desmonte", 0.7, {})],
+    "dissolucao": [("whoosh", 0.25, {"dur": 0.6})],
+}
+
+
+def cromo_janela(img, titulo=None, menu=("Arquivo", "Editar", "Exibir", "Ajuda")):
+    """Moldura de janela no estilo do sistema antigo em volta de uma imagem: borda em relevo, barra
+    de título azul com ícone e botões, barra de menus e área de conteúdo afundada.
+    Acrescenta 20 px na largura e 92 px na altura."""
+    titulo = titulo or a.NOME_MARCA
     w, h = img.size
-    out = Image.new("RGB", (w + 2 * borda, h + barra + 2 * borda), (20, 12, 36))
+    largura, altura = w + 20, h + 92
+    out = Image.new("RGB", (largura, altura), W98_CINZA)
     d = ImageDraw.Draw(out)
-    d.rectangle((0, 0, out.width - 1, out.height - 1), outline=a.ROXO, width=borda)
-    d.rectangle((borda, borda, out.width - borda - 1, borda + barra - 1), fill=a.ROXO)
-    d.text((borda + 18, borda + 14), titulo, font=a.fonte("mono", 26), fill=a.TEXTO)
-    for k, cor in enumerate((a.AMARELO, a.MAGENTA, CIANO)):
-        x = out.width - borda - 48 - k * 42
-        d.rectangle((x, borda + 16, x + 26, borda + 42), fill=cor, outline=(10, 8, 18))
-    out.paste(img, (borda, borda + barra))
-    return out
-
-
-def _janela_em(A, s_x, s_y):
-    w, h = A.size
-    ww, hh = max(8, int(w * s_x)), max(8, int(h * s_y))
-    return cromo_janela(A.resize((ww, max(4, hh - 70)), Image.BILINEAR))
-
-
-def t_janela(A, B, p, chave=None, modo="minimiza"):
-    """Janela retrô: a cena vira uma janela e então minimiza (desce encolhendo), fecha (colapsa
-    numa linha, como TV antiga) ou some suavemente."""
-    w, h = A.size
-    out = B.copy()
-    if p < 0.2:
-        jan = _janela_em(A, 1 - 0.12 * suave(p / 0.2), 1 - 0.12 * suave(p / 0.2))
-        out.paste(jan, ((w - jan.width) // 2, (h - jan.height) // 2))
-        return out
-    q = (p - 0.2) / 0.8
-    if modo == "minimiza":
-        s = 0.88 * (1 - entrada(q)) + 0.04
-        jan = _janela_em(A, s, s)
-        cx, cy = w / 2, h / 2 + (h / 2 - 140) * entrada(q)
-        a.colar(out, jan.convert("RGBA"), int(cx - jan.width / 2), int(cy - jan.height / 2), 1 - max(0, (q - 0.75) / 0.25))
-    elif modo == "fecha":
-        sy = 0.88 * (1 - suave(q / 0.6)) + 0.004
-        sx = 0.88 if q < 0.6 else 0.88 * (1 - suave((q - 0.6) / 0.4))
-        if sx > 0.01:
-            jan = _janela_em(A, sx, max(sy, 0.05)) if sy > 0.05 else Image.new("RGB", (int(w * sx), 6), (255, 245, 255))
-            out.paste(jan, (int((w - jan.width) / 2), int((h - jan.height) / 2)))
-    else:  # suave
-        s = 0.88 - 0.06 * q
-        jan = _janela_em(A, s, s)
-        a.colar(out, jan.convert("RGBA"), int((w - jan.width) / 2), int((h - jan.height) / 2), 1 - suave(q))
+    bisel(d, (0, 0, largura - 1, altura - 1), "janela")
+    tx0, ty0, tx1, ty1 = 6, 6, largura - 7, 45
+    mascara = Image.linear_gradient("L").rotate(90).resize((tx1 - tx0 + 1, ty1 - ty0 + 1))
+    barra = Image.composite(Image.new("RGB", mascara.size, W98_AZUL2), Image.new("RGB", mascara.size, W98_AZUL), mascara)
+    out.paste(barra, (tx0, ty0))
+    icone = Image.new("RGBA", (10, 12), (0, 0, 0, 0))
+    di = ImageDraw.Draw(icone)
+    di.polygon([(0, 0), (6, 0), (9, 3), (9, 11), (0, 11)], fill=W98_BRANCO + (255,), outline=W98_PRETO + (255,))
+    di.line([(6, 0), (6, 3), (9, 3)], fill=W98_PRETO + (255,))
+    for yy in (5, 7, 9):
+        di.line([(2, yy), (7, yy)], fill=W98_AZUL + (255,))
+    out.paste(ampliar(icone, 2), (tx0 + 8, ty0 + 8), ampliar(icone, 2))
+    d.text((tx0 + 36, (ty0 + ty1) / 2), titulo, font=a.fonte("titulo", 22), fill=W98_BRANCO, anchor="lm")
+    bw, bh = 32, 28
+    by = ty0 + (ty1 - ty0 + 1 - bh) // 2
+    fechar = tx1 - 4 - bw
+    maxi = fechar - 6 - bw
+    mini = maxi - bw
+    for x in (fechar, maxi, mini):
+        botao(d, (x, by, x + bw - 1, by + bh - 1))
+    d.line((fechar + 10, by + 8, fechar + bw - 11, by + bh - 9), fill=W98_PRETO, width=3)
+    d.line((fechar + 10, by + bh - 9, fechar + bw - 11, by + 8), fill=W98_PRETO, width=3)
+    d.rectangle((maxi + 9, by + 7, maxi + bw - 10, by + bh - 8), outline=W98_PRETO, width=2)
+    d.rectangle((maxi + 9, by + 7, maxi + bw - 10, by + 10), fill=W98_PRETO)
+    d.rectangle((mini + 9, by + bh - 11, mini + 20, by + bh - 8), fill=W98_PRETO)
+    f = a.fonte("corpo", 20)
+    x = 16
+    for item in menu:
+        d.text((x, 63), item, font=f, fill=W98_PRETO, anchor="lm")
+        d.line((x, 74, x + f.getlength(item[0]), 74), fill=W98_PRETO, width=2)
+        x += f.getlength(item) + 28
+    bisel(d, (6, 78, largura - 7, altura - 7), "afundado")
+    out.paste(img, (10, 82))
     return out
 
 
@@ -373,15 +437,11 @@ TRANSICOES = {
     "desmontagem": (t_desmontagem, 0.75),
     "cacos": (t_cacos, 0.85),
     "dissolucao": (t_dissolucao, 0.6),
-    "janela_minimiza": (t_janela, 0.75),
-    "janela_fecha": (t_janela, 0.7),
 }
 
 
 def transicao(nome, A, B, p, chave):
     f, _ = TRANSICOES[nome]
-    if nome.startswith("janela"):
-        return t_janela(A, B, p, chave, modo=nome.split("_")[1])
     return f(A, B, p, chave)
 
 
@@ -593,3 +653,36 @@ class Mesa:
             w.setframerate(SR)
             w.writeframes(dados.tobytes())
         return g
+
+
+def rachar(img, semente):
+    """Cartão rachado a partir do canto superior direito, com lascas e fragmentos em pixels."""
+    rnd = random.Random(semente)
+    w, h = img.size
+    out = Image.new("RGBA", (w + 160, h + 120), (0, 0, 0, 0))
+    out.alpha_composite(img, (0, 60))
+    d = ImageDraw.Draw(out)
+    origem = (w - 24, 62)
+    for k in range(6):
+        ang = math.radians(150 + k * 24 + rnd.uniform(-8, 8))
+        x, y = origem
+        pts = [(x, y)]
+        for _ in range(4):
+            passo = rnd.uniform(40, 95)
+            ang += rnd.uniform(-0.45, 0.45)
+            x, y = x + passo * math.cos(ang), y + passo * math.sin(ang)
+            pts.append((x, min(y, h + 56)))
+        d.line(pts, fill=(255, 255, 255, 200), width=3)
+    for _ in range(14):  # lascas que saíram do cartão
+        x, y = origem[0] + rnd.uniform(-30, 30), origem[1] + rnd.uniform(-10, 30)
+        t = rnd.choice((10, 14, 18))
+        d.rectangle((x, y, x + t, y + t), fill=(0, 0, 0, 0))
+    for _ in range(22):  # fragmentos voando para fora
+        x = origem[0] + rnd.uniform(10, 150)
+        y = origem[1] + rnd.uniform(-60, 50)
+        t = rnd.choice((8, 12, 16))
+        cor = rnd.choice([a.MAGENTA, a.CARTAO, a.TEXTO, (120, 60, 200)])
+        d.rectangle((x, y, x + t, y + t), fill=cor + (rnd.randint(150, 255),))
+    puf = explosao(0.32, semente=semente, esc=3)
+    out.alpha_composite(puf, (int(origem[0] - puf.width / 2 + 30), int(origem[1] - puf.height / 2)))
+    return out

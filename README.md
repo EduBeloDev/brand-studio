@@ -4,12 +4,18 @@ Uma esteira de produção de conteúdo de marca: você informa um tema, recebe u
 
 O objetivo é evoluir para a criação de posts, carrosséis e vídeos curtos com identidade visual consistente, variedade de estilos e acabamento profissional, mantendo a revisão humana antes de qualquer publicação.
 
-**Estado atual: protótipo funcional, versão 0.1.0.** O fluxo de geração, armazenamento e aprovação já funciona pelo navegador e pelo terminal. O conteúdo ainda é provisório: a aplicação usa uma marca fixa, repete o tema como título e desenha um SVG simples. Não há chamadas a IA, geração de vídeos ou publicação em redes sociais nesta versão.
+**Estado atual (29/10/2026): versão 0.1.0, em desenvolvimento.** Há duas partes:
+
+- **Estúdio de conteúdo** (novo, aberto em `npm run app`): notas e pastas em `conteudo/`, grafo de ligações, quadros de vídeo e de carrossel, IA dentro do app (Claude Code em modo restrito), memória de branding, modo de aprendizado que pesquisa tendências sozinho, análise de referências ("roubar ideias") e renderização de vídeos 1080x1920 e carrosséis 1080x1350 pelo motor em Python de `amostras/`.
+- **Esteira de peças** (original, aba **Peças** e terminal): gera, lista e aprova peças. As estações dela continuam provisórias (marca fixa, título igual ao tema, SVG simples).
+
+Nada é publicado em redes sociais: tudo o que sai fica em `saida/` para a pessoa revisar.
 
 ## Índice
 
+- [Estúdio de conteúdo](#estúdio-de-conteúdo)
 - [O que já funciona](#o-que-já-funciona)
-- [Interface e prints](#interface-e-prints)
+- [Telas](#telas)
 - [Como rodar após clonar](#como-rodar-após-clonar)
 - [Usar pelo terminal](#usar-pelo-terminal)
 - [Arquivos gerados e aprovação](#arquivos-gerados-e-aprovação)
@@ -18,9 +24,34 @@ O objetivo é evoluir para a criação de posts, carrosséis e vídeos curtos co
 - [Tecnologias e estrutura](#tecnologias-e-estrutura)
 - [Testes e conferências](#testes-e-conferências)
 - [O que ainda será desenvolvido](#o-que-ainda-será-desenvolvido)
+- [Correções pendentes](#correções-pendentes)
+- [Sua marca fica no seu computador](#sua-marca-fica-no-seu-computador)
 - [Limitações atuais](#limitações-atuais)
 - [Problemas comuns](#problemas-comuns)
 - [Decisões e desenvolvimento](#decisões-e-desenvolvimento)
+
+## Estúdio de conteúdo
+
+Detalhes, decisões e andamento em [docs/estudio.md](docs/estudio.md); problemas encontrados e soluções em [docs/problemas.md](docs/problemas.md). A aba **Ajuda** do app tem um passo a passo de cada fluxo.
+
+| Aba | O que faz |
+| --- | --- |
+| Início | Mostra o modo de aprendizado (radar): ciclos, custo do dia, descobertas e sugestões de vídeo/carrossel. Uma sugestão vira quadro com um clique. |
+| Conteúdos | Barra lateral com as pastas de `conteudo/`; criar, renomear (atualiza as ligações `[[nome]]`), mover, excluir para a lixeira e restaurar; editor de notas; quadros com prévia ao lado. |
+| Grafo | As notas e suas ligações, como no Obsidian. |
+| Roubar ideias | Recebe vídeo, áudio ou imagem de referência, extrai ritmo, quadros, transcrição e cores localmente e pede à IA técnicas reaproveitáveis, sem copiar o texto. |
+| Marca | Identidade escrita pela pessoa, preferências calculadas das escolhas e perfil consolidado pela IA (`conteudo/branding/`). |
+| Produções | Vídeos e carrosséis renderizados, com as tarefas em andamento. |
+| Peças | A esteira original. |
+| Ajuda | Busca, perguntas frequentes e passo a passo. |
+
+**Quadro de vídeo:** cartões de fala formam a linha principal; transições e animações (demonstração de código, comparação, lista, bombinha, sons) ficam presas à fala em que acontecem. **Quadro de carrossel:** cartões de slide em ordem, cada um com um modelo (capa, explicação, comparação, código, mito ou verdade, passos, fechamento). Os quadros são arquivos `.quadro.json` em `conteudo/quadros/` e salvam sozinhos.
+
+**Produzir** coloca a renderização numa fila em segundo plano. O vídeo é narrado (Chatterbox com timbre da Piper), alinhado pelo Whisper, mixado com trilha chiptune e efeitos sintetizados. O carrossel sai como um PNG por slide e um `.zip`. Tudo vai para `saida/estudio/`.
+
+**Pronúncia:** `conteudo/branding/identidade/pronuncia.md` diz como falar siglas e jargões; o app aplica só na voz, a tela e a legenda usam a grafia normal.
+
+**Custo:** a IA roda pelo comando `claude` já autenticado na máquina. O radar tem teto de custo por dia e de ciclos por sessão (configuráveis) e anota o custo de cada ciclo. Para abrir o app sem o radar começar sozinho: `RADAR=desligado npm run app`.
 
 ## O que já funciona
 
@@ -36,46 +67,68 @@ O objetivo é evoluir para a criação de posts, carrosséis e vídeos curtos co
 - Usar data, hora e tema no identificador; adicionar sufixos quando houver pedidos iguais no mesmo segundo, evitando sobrescrita.
 - Listar as peças da mais recente para a mais antiga e persistir seu status em disco.
 
-### Painel web
+### Aba Peças (esteira original)
 
-- Gerar peças por um formulário.
-- Exibir cartões com prévia do visual, título, legenda, status e eventuais avisos.
-- Filtrar por **Aguardando**, **Aprovadas**, **Rejeitadas** ou **Todas**.
+- Gerar uma peça a partir de um tema.
+- Listar as peças com prévia do visual, título, legenda, status e avisos.
 - Aprovar ou rejeitar peças pendentes.
-- Mostrar mensagens de andamento, sucesso e erro; desabilitar o botão de geração enquanto o pedido está em execução.
-- Alternar entre tema escuro e claro, lembrando a preferência no navegador.
-- Usar uma interface roxa com gradientes, botões em relevo e iluminação que acompanha o cursor.
-- Adaptar a disposição dos cartões à largura disponível, oferecer foco visível por teclado e respeitar a preferência de redução de movimento nas transições. A experiência em celular ainda precisa de validação visual.
+- O tema escuro ou claro, a navegação por teclado e a disposição na tela seguem o resto do app.
 
 ### Terminal e execução local
 
 - Gerar peças, listar pendentes e aprovar ou rejeitar por comandos.
 - Compartilhar o mesmo núcleo entre terminal e painel: uma peça criada em um aparece no outro após atualizar a lista.
-- Rodar sem banco de dados, etapa de compilação ou configuração de serviços externos.
+- Rodar sem banco de dados nem serviços externos; só a interface do estúdio tem build (Vite).
 - Servir a interface e uma API HTTP local com o servidor nativo do Node.
 - Escutar apenas em `127.0.0.1`, restringindo o painel ao próprio computador.
 
-## Interface e prints
+## Telas
 
-O painel tem um formulário **Nova peça** no topo e uma grade **Peças** com filtros e ações de aprovação abaixo. O tema escuro é o padrão; o botão no cabeçalho alterna para o claro.
+Capturas de 29/10/2026 feitas numa cópia de demonstração, com uma marca fictícia ("Marca Exemplo") e o robozinho de exemplo do motor. Nenhuma tela mostra conteúdo de uma marca real. Como refazer: [docs/prints/README.md](docs/prints/README.md).
 
-Capturas reais feitas em 28/10/2026, com uma peça gerada pelo formulário e aguardando aprovação. A arte cinza é o resultado provisório real do gerador.
+### Início: modo de aprendizado e sugestões
 
-### Tema escuro
+O radar pesquisa tendências sozinho, dentro de um teto de custo, e transforma o que acha em sugestões. Cada sugestão vira um quadro de vídeo ou de carrossel com um clique.
 
-![Painel escuro com formulário, prévia, legenda e botões de aprovação](docs/prints/painel-escuro.png)
+![Tela inicial com o modo de aprendizado parado, custo do dia e três sugestões de vídeo e carrossel](docs/prints/estudio-inicio.png)
 
-### Tema claro
+### Conteúdos: notas com ligações
 
-![Painel claro com uma peça aguardando aprovação](docs/prints/painel-claro.png)
+As notas são arquivos Markdown de verdade em `conteudo/`, com ligações `[[nome]]` e retroligações.
 
-### Janela estreita
+![Nota "O que é uma API" aberta, com as ligações para API, Endpoint, JSON, HTTP e para o quadro](docs/prints/estudio-nota.png)
 
-Captura com largura de 500 px no Firefox, mostrando a reorganização do formulário e dos filtros. Não equivale a um teste em celular físico ou em larguras menores.
+### Quadro de vídeo
 
-<img src="docs/prints/painel-estreito.png" alt="Painel em janela estreita, com formulário e filtros reorganizados" width="375">
+As falas formam a linha principal; transições e animações ficam presas à fala. Ao clicar num cartão, a prévia da cena é desenhada pelo motor em segundos.
 
-O [guia de capturas](docs/prints/README.md) explica como atualizar as imagens e resolver bloqueios de permissão.
+![Quadro de vídeo com quatro falas, transições e demonstrações; à direita, o cartão em edição e a prévia da cena](docs/prints/estudio-quadro-video.png)
+
+### Quadro de carrossel
+
+Slides em ordem, cada um com um modelo (capa, explicação, código, mito ou verdade, fechamento) e prévia em 1080x1350.
+
+![Quadro de carrossel com cinco slides e a prévia do slide de código](docs/prints/estudio-quadro-carrossel.png)
+
+### Grafo
+
+![Grafo das notas e suas ligações, colorido por pasta](docs/prints/estudio-grafo.png)
+
+### Marca: memória de branding
+
+O app registra escolhas, aprovações e correções feitas depois da IA, calcula preferências e consolida um perfil da marca.
+
+![Memória da marca com o perfil, as escolhas mais usadas e as escolhas recentes](docs/prints/estudio-marca.png)
+
+### Produções
+
+![Produções com um carrossel renderizado, botões de baixar o .zip, aprovar e rejeitar](docs/prints/estudio-producoes.png)
+
+### Tema claro e janela estreita
+
+<img src="docs/prints/estudio-tema-claro.png" alt="Tela inicial no tema claro" width="720"> <img src="docs/prints/estudio-estreito.png" alt="Tela inicial numa janela de 500 px" width="240">
+
+A janela de 500 px não equivale a um teste em celular. Nela, as abas do topo rolam para o lado sem indicação visível (ver pendências).
 
 ## Como rodar após clonar
 
@@ -106,31 +159,32 @@ npm ci
 
 `npm ci` instala as dependências conforme o `package-lock.json`. Não use `--omit=dev`: os comandos dependem de ferramentas que estão em `devDependencies`, incluindo o Node oficial instalado pelo projeto. Para atualizar dependências durante o desenvolvimento, use `npm install` e revise as mudanças no arquivo de versões.
 
-### 3. Iniciar o painel
+### 3. Iniciar o app
 
 ```bash
-npm run painel
+npm run app
 ```
 
-Abra **http://localhost:3000** no navegador. O comando mantém o servidor ativo no terminal; ele não abre o navegador automaticamente. Para encerrar, pressione `Ctrl+C`.
+Abra **http://localhost:3000** no navegador. O comando constrói a interface React (Vite, em `web/dist/`) e liga o servidor; ele não abre o navegador automaticamente. Para encerrar, pressione `Ctrl+C`. Depois da primeira vez, `npm run painel` liga o servidor sem reconstruir a interface. Para mexer na interface com recarga automática: `npm run dev` num terminal e `npm run painel` em outro.
 
-Não é necessário executar um comando de build. O Node executa os arquivos TypeScript diretamente, removendo os tipos durante a execução. Os comandos `npm run` usam o Node instalado no projeto, evitando depender de uma instalação do sistema que não tenha esse suporte.
+O servidor e o núcleo não têm build: o Node executa os arquivos TypeScript diretamente. Os comandos `npm run` usam o Node instalado no projeto, evitando depender de uma instalação do sistema que não tenha esse suporte.
 
-### 4. Gerar e revisar a primeira peça
+**Para o estúdio produzir vídeos e carrosséis** é preciso, além do Node: Python 3 com Pillow, `ffmpeg`, os ambientes de voz e de transcrição em `amostras/` (`.venv-cb` e `.venv-asr`, descritos em [amostras/README.md](amostras/README.md)) e o comando `claude` (Claude Code) autenticado, para a IA. Sem eles, notas, quadros e a esteira de peças funcionam; a renderização e a IA mostram erro. Ainda não há instalação reproduzível única desses ambientes.
 
-1. No campo **Nova peça**, escreva um tema curto, como `Promoção de verão`.
-2. Clique em **Gerar peça**.
-3. A peça aparece no filtro **Aguardando**, com o visual provisório e a legenda.
-4. Confira o conteúdo e clique em **Aprovar** ou **Rejeitar**.
-5. Abra o filtro correspondente para encontrar a peça depois da decisão.
+### 4. Primeiros passos no estúdio
 
-Um clone novo começa sem peças: `saida/` não é versionada e será criada automaticamente na primeira geração. Recarregue a página para ver alterações feitas por outro terminal ou outra aba.
+1. Na aba **Marca**, abra as notas de identidade e preencha objetivo, visual, voz e personagem. O nome da marca fica em `conteudo/branding/marca.json`.
+2. Na aba **Início**, use **Pesquisar agora** para o radar trazer sugestões (usa a IA e tem custo; veja o teto nas configurações do radar) ou crie um quadro em **Conteúdos** com **+ Quadro**.
+3. Numa sugestão, clique em **Vídeo** ou **Carrossel**: a IA monta o quadro. Ajuste os cartões e confira a prévia à direita.
+4. Clique em **Produzir**. O resultado aparece em **Produções**, onde dá para baixar, aprovar ou rejeitar.
 
-**Aprovar muda apenas o status local. Não publica a peça.**
+Um clone novo começa com `conteudo/` quase vazio: o app cria as notas de branding como modelos na primeira vez que abre. A aba **Peças** mantém a esteira original (tema, prévia e aprovação).
+
+**Aprovar muda apenas o status local. Nada é publicado em redes sociais.**
 
 ### Usar outra porta
 
-A única variável de ambiente lida atualmente é `PORT`, com padrão `3000`. Defina-a no terminal antes de iniciar:
+A porta vem da variável `PORT`, com padrão `3000` (as outras variáveis, `RADAR`, `CLAUDE_BIN` e `BRAND_STUDIO_*`, estão descritas nas seções do estúdio e da marca). Defina-a no terminal antes de iniciar:
 
 ```bash
 # Linux/macOS
@@ -209,7 +263,7 @@ As estações foram separadas para permitir substituir as versões provisórias 
 
 ## API local
 
-Disponível enquanto `npm run painel` estiver ativo. Não existe autenticação nesta versão; o servidor é destinado ao uso local.
+Disponível enquanto `npm run painel` (ou `npm run app`) estiver ativo. Não existe autenticação nesta versão; o servidor é destinado ao uso local. As rotas do estúdio (`/api/arvore`, `/api/quadro`, `/api/sugestoes`, `/api/radar`, `/api/branding`, `/api/referencias`, `/api/tarefas` e outras) estão em `web/api.ts`; abaixo, só as da esteira de peças.
 
 | Método | Rota | Resultado |
 | --- | --- | --- |
@@ -218,7 +272,7 @@ Disponível enquanto `npm run painel` estiver ativo. Não existe autenticação 
 | `POST` | `/api/pecas/:id/status` | Atualiza o status com `{"status":"aprovada"}` ou outro status válido |
 | `GET` | `/pecas/:id/:arquivo` | Serve um arquivo da peça, como `visual.svg`, `legenda.txt` ou `peca.json` |
 
-Os pedidos `POST` exigem `Content-Type: application/json`; o corpo tem limite de 10.000 bytes. Os status válidos são `aguardando-aprovacao`, `aprovada` e `rejeitada`. Erros tratados pela API retornam HTTP 400 com um campo `erro`.
+Os pedidos `POST` exigem `Content-Type: application/json`. Os status válidos são `aguardando-aprovacao`, `aprovada` e `rejeitada`. Erros tratados pela API retornam HTTP 400 com um campo `erro`.
 
 Exemplo em um segundo terminal, com o servidor ativo (requer `curl`):
 
@@ -235,10 +289,12 @@ Há validação de identificadores e contenção dos caminhos de arquivos, escap
 ## Tecnologias e estrutura
 
 - **TypeScript + Node.js:** núcleo, CLI e servidor HTTP nativo.
-- **HTML, CSS e JavaScript puro:** interface sem framework nem compilação.
-- **Sistema de arquivos + JSON:** persistência local.
-- **SVG:** visual provisório.
-- **Vitest:** testes automatizados.
+- **React + Vite:** interface do estúdio (`web/app/`), com `@xyflow/react` (quadros) e `d3-force` (grafo), ambos MIT/ISC.
+- **Python (Pillow) + ffmpeg:** motor de renderização em `amostras/`, chamado pelo servidor.
+- **Claude Code (`claude -p`) em modo restrito:** a IA dentro do app.
+- **Sistema de arquivos + Markdown + JSON:** persistência local.
+- **SVG:** visual provisório da esteira de peças.
+- **Vitest + jsdom + Testing Library:** testes automatizados, incluindo componentes da interface.
 - **TypeScript (`tsc`):** conferência estática de tipos.
 - **npm + package-lock.json:** comandos e dependências.
 
@@ -246,7 +302,18 @@ Há validação de identificadores e contenção dos caminhos de arquivos, escap
 brand-studio/
 ├── README.md                 Guia de instalação, uso e estado do produto
 ├── CLAUDE.md                 Decisões, diretrizes e continuidade do trabalho
+├── conteudo/                 Notas, quadros, branding e conhecimento do estúdio (o que é de máquina fica em .estudio/, fora do Git)
+├── amostras/                 Motor de renderização em Python (estudio_render.py e módulos), voz, trilha e robozinho de exemplo
+├── docs/                     estudio.md (plano e decisões), problemas.md e prints/ (capturas, montar_demo.py, capturar.mjs)
 ├── core/
+│   ├── conteudo/             Caminhos seguros, árvore de notas, ligações e grafo
+│   ├── quadro/               Modelo, validação e ordem dos quadros
+│   ├── carrossel/            Modelos de slide
+│   ├── ia/                   Claude Code restrito, IA falsa dos testes e geração
+│   ├── branding/             Memória de branding
+│   ├── radar/                Modo de aprendizado
+│   ├── referencias/          Roubar ideias
+│   ├── render/               Ponte com o motor Python e fila de tarefas
 │   ├── tipos.ts              Contratos entre as etapas
 │   ├── linha.ts              Coordenação da produção
 │   ├── saida.ts              Gravação, leitura e alteração de status
@@ -259,12 +326,10 @@ brand-studio/
 ├── cli/
 │   └── index.ts              Comandos gerar e revisar
 ├── web/
-│   ├── server.ts             API e arquivos estáticos em 127.0.0.1
-│   └── public/
-│       ├── index.html        Estrutura do painel
-│       ├── estilo.css        Aparência e temas
-│       └── app.js            Interações e comunicação com a API
-├── docs/prints/              Capturas reais e orientações para atualizá-las
+│   ├── server.ts             Monta as peças reais e escuta em 127.0.0.1
+│   ├── api.ts                API do estúdio (testada em api.test.ts)
+│   ├── app/                  Interface React (Vite); constrói em web/dist/, fora do Git
+│   └── public/               Painel antigo em HTML puro; não é mais servido (a decidir se sai)
 ├── saida/                    Peças locais; criada ao gerar, fora do Git
 ├── package.json              Dependências e comandos
 ├── package-lock.json         Versões das dependências
@@ -272,7 +337,7 @@ brand-studio/
 └── .gitignore                Exclui dependências, saídas, .env e amostras locais
 ```
 
-Arquivos locais de referência de personagem não constituem um gerador de personagens ou recurso integrado ao painel. A pasta `amostras/` está ignorada pelo Git e não deve ser necessária para executar um clone novo.
+Em `amostras/`, só os scripts Python, JSON, documentação e recortes do personagem vão para o Git; ambientes, modelos e renders ficam locais.
 
 ## Testes e conferências
 
@@ -281,9 +346,9 @@ npm test
 npm run tipos
 ```
 
-Conferido em 28/10/2026: **8 testes passando** e checagem de tipos sem erros. Os testes cobrem geração com arquivos, recusa de tema vazio, colisão de identificadores, escape do SVG, persistência de aprovação, lista vazia, bloqueio de ID com caminho e erro de peça inexistente. Usam pastas temporárias, sem alterar `saida/`.
+Conferido em 29/10/2026: **183 testes passando em 19 arquivos** (num clone sem `conteudo/branding/marca.json`, os 2 testes da trava da marca ficam pulados) e checagem de tipos sem erros (núcleo, servidor e interface). Os testes cobrem a esteira, o núcleo de conteúdo (incluindo bloqueio de caminhos com `../`), quadros, modelos de slide, IA (com uma IA falsa, sem gasto), memória de branding, radar, roubar ideias, fila e ponte do motor, API HTTP (incluindo as rotas da aba Peças) e componentes da interface (jsdom). Usam pastas temporárias, sem alterar `conteudo/` nem `saida/`. O motor Python e a IA real não entram nos testes automáticos; foram conferidos produzindo peças de verdade.
 
-Não há uma suíte de testes automatizados de navegador no repositório. A checagem de tipos inclui o núcleo, a CLI e o servidor; não verifica o JavaScript da interface. Após atualizar as permissões do ambiente, foram conferidos o acesso à API, a geração pelo formulário e a alternância de temas no Firefox, com inspeção das capturas em janela ampla e estreita (500 px). Ainda falta validar em celular e em larguras menores.
+As telas do estúdio foram conferidas no Firefox em 29/10/2026. As capturas da seção [Telas](#telas) foram feitas numa cópia de demonstração. Falta validar em celular e em larguras menores.
 
 ## O que ainda será desenvolvido
 
@@ -330,11 +395,41 @@ Os itens abaixo registram a direção desejada. Não são funcionalidades dispon
 
 As decisões detalhadas ficam em [CLAUDE.md](CLAUDE.md).
 
+## Correções pendentes
+
+Anotadas em 29/10/2026, depois da primeira produção de teste feita pelo próprio app e das capturas de tela. Causas e histórico em [docs/problemas.md](docs/problemas.md).
+
+**Defeitos a corrigir**
+
+- [ ] Demonstração de código no vídeo: uma saída longa no console é cortada na borda direita, em vez de quebrar a linha. Correção prevista: quebrar a saída pela largura medida da fonte, como já acontece nos textos de tela.
+- [ ] Quadro: o nome do quadro fica cortado no cabeçalho quando é longo (ex.: "O que é uma API (sem complic").
+- [ ] Janela estreita: as abas do topo rolam para o lado, mas não há indicação de que existem mais abas.
+- [x] Radar mostrava custo do dia zerado quando estava desligado (o estado salvo só era lido ao ligar). Corrigido em 29/10/2026, com teste.
+
+**Antes de publicar qualquer peça**
+
+- [ ] Conferir nas fontes originais as notícias e números que a IA trouxe (o radar marca o nível de evidência, mas não substitui a conferência).
+- [ ] Ouvir voz, pronúncia das siglas, trilha e mixagem, de preferência no celular.
+
+**Decisões em aberto**
+
+- [ ] Remover `web/public/` (painel antigo em HTML puro, que não é mais servido) ou manter como referência.
+- [ ] Instalação reproduzível dos ambientes Python do motor (`.venv-cb` e `.venv-asr`).
+
 ## Limitações atuais
 
+Do estúdio:
+
+- Rascunhos da IA precisam de revisão humana: o radar marca o nível de evidência e as fontes, mas afirmações e notícias devem ser conferidas antes de publicar.
+- Voz, trilha e mixagem dos vídeos não têm conferência automática de qualidade; a decisão final é de ouvido.
+- A instalação dos ambientes Python (voz e transcrição) ainda é manual.
+- Em aberto: tipos de cartão além de fala, transição, animação e slide; legenda e hashtags do carrossel; editor livre de slide.
+
+Da esteira de peças (aba Peças e terminal):
+
 - O pedido aceita apenas um tema: não há seleção de formato, duração, estilo ou marca.
-- Marca e legenda são provisórias; nenhuma API de IA é utilizada.
-- O visual é um SVG cinza quadrado, sem fotografia, imagens geradas, PNG, vídeo ou carrossel.
+- Marca e legenda são provisórias; a esteira não usa IA (o estúdio usa).
+- O visual é um SVG cinza quadrado; vídeos e carrosséis são feitos pelo estúdio, não pela esteira.
 - Títulos longos podem ultrapassar a borda do SVG; o template ainda não trata quebra de linha.
 - Não há editor de conteúdo, upload de referências, biblioteca de fontes, geração em lote ou botão de download. Os arquivos podem ser acessados em `saida/` e pelas rotas locais.
 - O painel não oferece desfazer aprovação/rejeição, exclusão, busca ou atualização em tempo real. A CLI pode mudar decisões e a API também pode retornar ao status pendente.
@@ -352,7 +447,7 @@ As decisões detalhadas ficam em [CLAUDE.md](CLAUDE.md).
 | Erro relacionado a TypeScript ao usar `node arquivo.ts` | Execute os comandos `npm run` após instalar todas as dependências; eles usam o Node oficial do projeto |
 | Dependência ou comando não encontrado | Confirme que está na raiz e rode `npm ci`, sem omitir dependências de desenvolvimento |
 | Porta 3000 em uso (`EADDRINUSE`) | Encerre a outra instância ou configure `PORT` |
-| Permissão negada para abrir a porta (`EPERM`) | Execute em um terminal local que permita servidor ou atualize as permissões da sessão do agente. Depois repita o comando; veja o [guia de diagnóstico](docs/prints/README.md#se-o-bloqueio-de-permissão-voltar) |
+| Permissão negada para abrir a porta (`EPERM`) | Execute em um terminal local que permita servidor ou atualize as permissões da sessão do agente. Depois repita o comando; veja o [guia de diagnóstico](docs/prints/README.md#se-der-erro) |
 | Navegador não abre o painel | Confira o endereço e a porta e mantenha `npm run painel` executando |
 | A lista parece vazia | Confira o filtro; peças aprovadas ou rejeitadas saem de **Aguardando**. Em clone novo, gere a primeira peça |
 | Peça criada na CLI não apareceu na aba aberta | Recarregue a página; não existe atualização em tempo real |
@@ -386,3 +481,18 @@ Copyright © 2026 Eduardo Simonelli (EduBeloDev). O código e a documentação o
 O titular mantém seus direitos e pode explorar comercialmente o próprio software. A licença não exige créditos do programa nos conteúdos gerados. Materiais e dependências de terceiros mantêm suas próprias licenças. O texto completo do `LICENSE` estabelece as condições; esta seção é um resumo.
 
 
+## Sua marca fica no seu computador
+
+O repositório tem só o app e o motor. Tudo o que é da marca fica fora do git, no computador de quem usa:
+
+- `conteudo/` inteiro (notas, branding, quadros, pesquisas, conhecimento do radar, referências), exceto o modelo de roteiro em `conteudo/templates/` e os ícones do Devicon em `conteudo/kit/icones/`.
+- `amostras/personagem/` (recortes do personagem) e os scripts das peças de exemplo; só o motor usado pelo app é versionado (lista no `.gitignore`).
+- `CLAUDE.local.md`, com as decisões criativas da marca.
+
+O nome da marca vem de `conteudo/branding/marca.json` (`{"nome": "..."}`), criado com o nome neutro "minha marca" na primeira vez que o app abre. Ele aparece no topo do app, na assinatura dos slides e vídeos e no que a IA recebe como contexto. Nenhum arquivo do código cita a marca, e o teste `core/branding/marca.test.ts` falha se o nome que está no seu `marca.json` aparecer em algum arquivo versionado.
+
+Personagem: o motor usa `amostras/personagem/` (um PNG por expressão, com os nomes do catálogo do motor), que fica só no seu computador. Sem essa pasta, ele usa o robozinho de exemplo de `amostras/personagem-exemplo/`, desenhado por `amostras/personagem_exemplo.py`.
+
+Para rodar o app com outra pasta de conteúdo (por exemplo, uma cópia de demonstração), use as variáveis `BRAND_STUDIO_CONTEUDO`, `BRAND_STUDIO_SAIDA` e `BRAND_STUDIO_PERSONAGEM`; o motor em Python lê as mesmas.
+
+O laboratório do motor está descrito em [amostras/README.md](amostras/README.md).

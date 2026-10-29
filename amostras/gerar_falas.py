@@ -1,5 +1,5 @@
 """Narração a partir de uma lista de falas (JSON), com o Chatterbox e a voz da Piper como timbre.
-Uso: .venv-cb/bin/python gerar_falas.py falas_a.json saida/narracao-mitos-a ref-piper.wav [exaggeration] [cfg]"""
+Uso: .venv-cb/bin/python gerar_falas.py falas.json saida/narracao ref-piper.wav [exaggeration] [cfg]"""
 import json
 import os
 import sys

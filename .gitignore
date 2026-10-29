@@ -1,15 +1,38 @@
 node_modules/
 saida/
 .env
-# Versionar fontes das amostras; manter ambientes, modelos e renders locais.
+# Amostras: só o motor que o app usa vai para o git. Scripts das peças da marca, personagem, ambientes,
+# modelos, áudios e renders ficam neste computador.
 /amostras/*
-!/amostras/*.py
-!/amostras/*.json
-!/amostras/*.md
-!/amostras/personagem/
-/amostras/personagem/*
-!/amostras/personagem/*.png
-!/amostras/personagem/*.json
+!/amostras/README.md
+!/amostras/arte.py
+!/amostras/efeitos.py
+!/amostras/demos.py
+!/amostras/demos_dados.py
+!/amostras/estudio_render.py
+!/amostras/voz.py
+!/amostras/trilha.py
+!/amostras/gerar_falas.py
+!/amostras/alinhar.py
+!/amostras/asr.py
+!/amostras/transcrever.py
+!/amostras/personagem_exemplo.py
+!/amostras/personagem-exemplo/
+
+# Marca: tudo o que é da marca fica só neste computador (nome, personagem, identidade, roteiros, quadros,
+# pesquisas, referências e decisões). Do conteudo/ só sobem o modelo de roteiro e os ícones do Devicon.
+/conteudo/*
+!/conteudo/templates/
+!/conteudo/kit/
+/conteudo/kit/*
+!/conteudo/kit/icones/
+CLAUDE.local.md
+/*.png
+/docs/referencias-visuais.md
+/backup/
 
 # Vídeos de terceiros usados somente como referência local
 /WhatsApp Video *.mp4
+
+# Interface construída
+/web/dist/
